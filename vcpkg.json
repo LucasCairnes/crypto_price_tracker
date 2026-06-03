@@ -5,6 +5,7 @@
     "fmt",
     "ixwebsocket",
     "nlohmann-json",
-    "libpqxx"
+    "libpqxx",
+    "librdkafka"
   ]
 }
