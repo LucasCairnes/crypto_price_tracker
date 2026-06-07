@@ -116,7 +116,7 @@ int main() {
         std::string binance_url = "wss://stream.binance.com:9443/ws";
         WebsocketClient client(binance_url);
 
-        std::string brokers = "temporary";
+        std::string brokers = "localhost:19092";
         std::string topic = "raw_trades";
         RedpandaProducer producer(brokers, topic);
 
@@ -144,7 +144,7 @@ int main() {
         client.stop();
 
     } catch (const std::exception &e) {
-        std::cerr << "Fatal Error: " << e.what() << std::endl;
+        std::cerr << "Fatal Error: " << e.what() << "\n";
         return 1;
     }
     return 0;
