@@ -1,4 +1,3 @@
-version: '3.7'
 services:
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
@@ -12,6 +11,8 @@ services:
     ports:
       - "19092:19092"
       - "9644:9644"
+    networks:
+      - streaming-network
 
   console:
     image: docker.redpanda.com/redpandadata/console:latest
@@ -23,3 +24,40 @@ services:
       - KAFKA_BROKERS=redpanda:9092
     depends_on:
       - redpanda
+    networks:
+      - streaming-network
+
+  jobmanager:
+    build:
+      context: .
+      dockerfile: Dockerfile.flink
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+    networks:
+      - streaming-network
+        
+  taskmanager:
+    build:
+      context: .
+      dockerfile: Dockerfile.flink
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    deploy:
+      replicas: 2
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: jobmanager
+        taskmanager.numberOfTaskSlots: 2
+    networks:
+      - streaming-network
+
+networks:
+  streaming-network:
+    driver: bridge
