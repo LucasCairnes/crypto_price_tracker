@@ -4,19 +4,24 @@ project(live_market_data)
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(producer producer.cpp)
-target_compile_features(producer PRIVATE cxx_std_20)
-
 find_package(fmt CONFIG REQUIRED)
 find_package(ixwebsocket CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
-find_package(libpqxx CONFIG REQUIRED)
 find_package(RdKafka CONFIG REQUIRED)
+find_package(Protobuf CONFIG REQUIRED)
 
-target_link_libraries(producer PRIVATE 
+add_executable(producer producer.cpp)
+target_compile_features(producer PRIVATE cxx_std_20)
+
+# Generate trade.pb.{h,cc} from trade.proto into the build dir and attach to target
+protobuf_generate(TARGET producer PROTOS trade.proto LANGUAGE cpp
+                  PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(producer PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+target_link_libraries(producer PRIVATE
     fmt::fmt
     ixwebsocket::ixwebsocket
     nlohmann_json::nlohmann_json
-    libpqxx::pqxx
     RdKafka::rdkafka++
+    protobuf::libprotobuf
 )
