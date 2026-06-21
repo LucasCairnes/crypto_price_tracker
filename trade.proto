@@ -2,11 +2,9 @@ syntax = "proto3";
 
 package market;
 
-// java_multiple_files => Flink references the class as "market.Trade"
 option java_multiple_files = true;
 option java_package = "market";
 
-// One Binance aggTrade event, normalized to typed fields.
 message Trade {
   string event_type            = 1;  // "aggTrade"      (Binance "e")
   int64  event_time            = 2;  // ms epoch        (Binance "E")
