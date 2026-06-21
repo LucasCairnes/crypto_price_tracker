@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package market;
+
+// java_multiple_files => Flink references the class as "market.Trade"
+option java_multiple_files = true;
+option java_package = "market";
+
+// One Binance aggTrade event, normalized to typed fields.
+message Trade {
+  string event_type            = 1;  // "aggTrade"      (Binance "e")
+  int64  event_time            = 2;  // ms epoch        (Binance "E")
+  string symbol                = 3;  // e.g. "BTCUSDT"  (Binance "s")
+  int64  agg_trade_id          = 4;  //                 (Binance "a")
+  double price                 = 5;  // parsed from str (Binance "p")
+  double quantity              = 6;  // parsed from str (Binance "q")
+  int64  first_trade_id        = 7;  //                 (Binance "f")
+  int64  last_trade_id         = 8;  //                 (Binance "l")
+  int64  trade_time            = 9;  // ms epoch, used for event-time (Binance "T")
+  bool   buyer_is_market_maker = 10; //                (Binance "m")
+}
