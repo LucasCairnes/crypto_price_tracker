@@ -27,6 +27,19 @@ services:
     networks:
       - streaming-network
 
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.producer
+    container_name: producer
+    depends_on:
+      - redpanda
+    environment:
+      - BROKERS=redpanda:9092
+    restart: unless-stopped
+    networks:
+      - streaming-network
+
   jobmanager:
     build:
       context: .
@@ -34,6 +47,8 @@ services:
     ports:
       - "8081:8081"
     command: jobmanager
+    volumes:
+      - ./trades_job.py:/opt/flink/usrlib/trades_job.py
     environment:
       - |
         FLINK_PROPERTIES=
