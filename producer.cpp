@@ -2,6 +2,7 @@
 #include <ixwebsocket/IXWebSocket.h>
 #include <librdkafka/rdkafkacpp.h>
 #include <nlohmann/json.hpp>
+#include "trade.pb.h"
 #include <iostream>
 #include <memory>
 #include <string>
@@ -15,10 +16,16 @@
 #include <exception>
 #include <algorithm>
 #include <functional>
+#include <csignal>
+#include <cstdlib>
 
 using json = nlohmann::json;
 
 std::atomic<bool> keep_running{true};
+
+void handle_signal(int) {
+    keep_running = false;
+}
 
 class RedpandaProducer {
     private:
@@ -113,15 +120,38 @@ void WebsocketClient::stop() {
 
 int main() {
     try {
+        std::signal(SIGINT, handle_signal);
+        std::signal(SIGTERM, handle_signal);
+
         std::string binance_url = "wss://stream.binance.com:9443/ws";
         WebsocketClient client(binance_url);
 
-        std::string brokers = "localhost:19092";
+        const char* env_brokers = std::getenv("BROKERS");
+        std::string brokers = env_brokers ? env_brokers : "localhost:19092";
         std::string topic = "raw_trades";
         RedpandaProducer producer(brokers, topic);
 
         client.send_json = [&producer](const std::string& msg) {
-            producer.send_data(msg);
+            try {
+                auto j = json::parse(msg);
+                if (!j.contains("e") || j["e"] != "aggTrade") return; 
+                market::Trade t;
+                t.set_event_type(j["e"].get<std::string>());
+                t.set_event_time(j["E"].get<int64_t>());
+                t.set_symbol(j["s"].get<std::string>());
+                t.set_agg_trade_id(j["a"].get<int64_t>());
+                t.set_price(std::stod(j["p"].get<std::string>()));
+                t.set_quantity(std::stod(j["q"].get<std::string>()));
+                t.set_first_trade_id(j["f"].get<int64_t>());
+                t.set_last_trade_id(j["l"].get<int64_t>());
+                t.set_trade_time(j["T"].get<int64_t>());
+                t.set_buyer_is_market_maker(j["m"].get<bool>());
+                std::string payload;
+                t.SerializeToString(&payload);
+                producer.send_data(payload);
+            } catch (const std::exception& e) {
+                std::cerr << "Parse error: " << e.what() << "\n";
+            }
         };
 
         json btc_subscribe = {
@@ -133,12 +163,10 @@ int main() {
         std::string subscribe_string = btc_subscribe.dump();
         client.start(subscribe_string);
 
-        std::string input;
-        std::cout << "Type 'quit' to exit: \n";
-
-        while (std::getline(std::cin, input)) {
-            if (input == "quit") break;
-        }   
+        std::cout << "Producer running. Send SIGINT/SIGTERM (docker stop) to exit.\n";
+        while (keep_running) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }
 
         producer.stop(10000);
         client.stop();
