@@ -1,83 +1,73 @@
 from pyflink.table import EnvironmentSettings, TableEnvironment
 
+
 def main():
-    # 1. Set up the Flink Table Environment in streaming mode
     env_settings = EnvironmentSettings.in_streaming_mode()
     t_env = TableEnvironment.create(env_settings)
 
-    # 2. Define the Source (Where the data comes from and its schema)
-    # Column names must match Binance JSON keys exactly for deserialization to work.
-    # A view below renames them to descriptive labels.
     source_ddl = """
         CREATE TABLE raw_trades (
-            e  STRING,
-            `E` BIGINT,
-            s  STRING,
-            a  BIGINT,
-            p  STRING,
-            q  STRING,
-            f  BIGINT,
-            l  BIGINT,
-            `T` BIGINT,
-            m  BOOLEAN,
-            `M` BOOLEAN,
-            event_time AS TO_TIMESTAMP_LTZ(`T`, 3),
-            WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND
+            event_type            STRING,
+            event_time            BIGINT,
+            symbol                STRING,
+            agg_trade_id          BIGINT,
+            price                 DOUBLE,
+            quantity              DOUBLE,
+            first_trade_id        BIGINT,
+            last_trade_id         BIGINT,
+            trade_time            BIGINT,
+            buyer_is_market_maker BOOLEAN,
+            rowtime AS TO_TIMESTAMP_LTZ(trade_time, 3),
+            WATERMARK FOR rowtime AS rowtime - INTERVAL '5' SECOND
         ) WITH (
             'connector' = 'kafka',
             'topic' = 'raw_trades',
             'properties.bootstrap.servers' = 'redpanda:9092',
-            'properties.group.id' = 'pyflink-processor',
-            'format' = 'json',
-            'scan.startup.mode' = 'latest-offset'
+            'properties.group.id' = 'pyflink-vwap',
+            'scan.startup.mode' = 'latest-offset',
+            'format' = 'protobuf',
+            'protobuf.message-class-name' = 'market.Trade',
+            'protobuf.ignore-parse-errors' = 'true'
         )
     """
     t_env.execute_sql(source_ddl)
 
-    # 2b. View with descriptive column names on top of the raw source
-    trades_view = """
-        CREATE VIEW trades AS
-        SELECT
-            e                        AS event_type,
-            event_time               AS event_time,
-            s                        AS symbol,
-            a                        AS agg_trade_id,
-            CAST(p AS DOUBLE)        AS price,
-            CAST(q AS DOUBLE)        AS quantity,
-            f                        AS first_trade_id,
-            l                        AS last_trade_id,
-            m                        AS buyer_is_market_maker
-        FROM raw_trades
-    """
-    t_env.execute_sql(trades_view)
-
-    # 3. Define the Sink (Where the processed data goes)
-    # The 'print' connector simply outputs the results to your terminal/logs.
     sink_ddl = """
-        CREATE TABLE aggregated_output (
+        CREATE TABLE enriched_trades (
             symbol        STRING,
-            total_volume  DOUBLE
+            window_start  STRING,
+            window_end    STRING,
+            vwap          DOUBLE,
+            volume        DOUBLE,
+            trade_count   BIGINT
         ) WITH (
-            'connector' = 'print'
+            'connector' = 'kafka',
+            'topic' = 'enriched_trades',
+            'properties.bootstrap.servers' = 'redpanda:9092',
+            'format' = 'json',
+            'sink.partitioner' = 'fixed'
         )
     """
     t_env.execute_sql(sink_ddl)
 
-    # 4. Write the Processing Logic
-    # We use standard SQL to process the stream as it arrives.
-    processing_query = """
-        INSERT INTO aggregated_output
+    vwap_query = """
+        INSERT INTO enriched_trades
         SELECT
             symbol,
-            SUM(quantity) AS total_volume
-        FROM trades
-        GROUP BY symbol
+            CAST(window_start AS STRING)          AS window_start,
+            CAST(window_end   AS STRING)          AS window_end,
+            SUM(price * quantity) / SUM(quantity) AS vwap,
+            SUM(quantity)                         AS volume,
+            COUNT(*)                              AS trade_count
+        FROM TABLE(
+            TUMBLE(TABLE raw_trades, DESCRIPTOR(rowtime), INTERVAL '10' SECOND)
+        )
+        GROUP BY symbol, window_start, window_end
     """
 
-    # 5. Execute the Job
-    # This submits the pipeline to the Flink cluster (or runs it locally).
-    print("Starting PyFlink job...")
-    t_env.execute_sql(processing_query)
+    print("Submitting PyFlink VWAP job...")
+    t_env.execute_sql(vwap_query)
+
 
 if __name__ == '__main__':
     main()
