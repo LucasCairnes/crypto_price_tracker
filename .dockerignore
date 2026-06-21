@@ -1,0 +1,5 @@
+build/
+.venv/
+.git/
+.DS_Store
+*.csv
