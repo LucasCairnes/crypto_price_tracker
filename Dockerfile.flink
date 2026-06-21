@@ -1,5 +1,25 @@
 FROM flink:1.20
-RUN wget -P /opt/flink/lib/ https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/3.3.0-1.20/flink-sql-connector-kafka-3.3.0-1.20.jar
-RUN apt-get update && apt-get install -y python3 python3-pip default-jdk-headless \
+
+RUN wget -P /opt/flink/lib/ https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/3.3.0-1.20/flink-sql-connector-kafka-3.3.0-1.20.jar \
+ && wget -P /opt/flink/lib/ https://repo1.maven.org/maven2/org/apache/flink/flink-protobuf/1.20.0/flink-protobuf-1.20.0.jar \
+ && wget -P /opt/flink/lib/ https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.21.7/protobuf-java-3.21.7.jar
+
+
+RUN apt-get update && apt-get install -y python3 python3-pip default-jdk-headless unzip \
     && ln -s /usr/bin/python3 /usr/bin/python \
     && JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac)))) pip3 install apache-flink==1.20.0
+
+COPY trade.proto /tmp/trade.proto
+RUN set -eux; \
+    case "$(uname -m)" in \
+      aarch64) pc="linux-aarch_64" ;; \
+      x86_64)  pc="linux-x86_64" ;; \
+      *) echo "unsupported arch $(uname -m)" && exit 1 ;; \
+    esac; \
+    wget -O /tmp/protoc.zip "https://github.com/protocolbuffers/protobuf/releases/download/v21.7/protoc-21.7-${pc}.zip"; \
+    unzip -o /tmp/protoc.zip -d /tmp/protoc; \
+    mkdir -p /tmp/gen /tmp/classes; \
+    /tmp/protoc/bin/protoc --proto_path=/tmp --java_out=/tmp/gen /tmp/trade.proto; \
+    javac -cp /opt/flink/lib/protobuf-java-3.21.7.jar -d /tmp/classes $(find /tmp/gen -name '*.java'); \
+    (cd /tmp/classes && jar cf /opt/flink/lib/trade-proto.jar .); \
+    rm -rf /tmp/protoc.zip /tmp/protoc /tmp/gen /tmp/classes
