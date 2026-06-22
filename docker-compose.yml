@@ -73,6 +73,44 @@ services:
     networks:
       - streaming-network
 
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: timescaledb
+    environment:
+      - POSTGRES_DB=market
+      - POSTGRES_USER=market
+      - POSTGRES_PASSWORD=market
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - timescale-data:/var/lib/postgresql/data
+    networks:
+      - streaming-network
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: consumer
+    depends_on:
+      - redpanda
+      - timescaledb
+    environment:
+      - BROKERS=redpanda:9092
+      - TOPIC=enriched_trades
+      - PG_HOST=timescaledb
+      - PG_DB=market
+      - PG_USER=market
+      - PG_PASSWORD=market
+      - BATCH_SIZE=500
+    restart: unless-stopped
+    networks:
+      - streaming-network
+
 networks:
   streaming-network:
     driver: bridge
+
+volumes:
+  timescale-data:
