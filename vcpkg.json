@@ -6,6 +6,7 @@
     "ixwebsocket",
     "nlohmann-json",
     "protobuf",
-    "librdkafka"
+    "librdkafka",
+    "libpqxx"
   ]
 }

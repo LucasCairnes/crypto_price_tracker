@@ -9,6 +9,7 @@ find_package(ixwebsocket CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(RdKafka CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
+find_package(libpqxx CONFIG REQUIRED)
 
 add_executable(producer producer.cpp)
 target_compile_features(producer PRIVATE cxx_std_20)
@@ -24,4 +25,13 @@ target_link_libraries(producer PRIVATE
     nlohmann_json::nlohmann_json
     RdKafka::rdkafka++
     protobuf::libprotobuf
+)
+
+add_executable(consumer consumer.cpp)
+target_compile_features(consumer PRIVATE cxx_std_20)
+
+target_link_libraries(consumer PRIVATE
+    nlohmann_json::nlohmann_json
+    RdKafka::rdkafka++
+    libpqxx::pqxx
 )
