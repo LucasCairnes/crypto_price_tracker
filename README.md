@@ -16,15 +16,6 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
 
 ---
 
-## Key Engineering Features
-* **Event-Time Stream Processing:** A PyFlink (Table/SQL) job aggregates the raw trade firehose into 10-second tumbling windows, computing VWAP, volume, trade counts, and OHLC candles. Watermarks tolerate up to 5 seconds of out-of-order or late-arriving trades, so windows reflect when trades actually happened rather than when they arrived.
-* **Reliable, Idempotent Persistence:** The C++ consumer uses manual Kafka offset commits — flushing a batch to TimescaleDB *before* committing offsets — to guarantee at-least-once delivery. An `ON CONFLICT DO UPDATE` upsert keyed on `(symbol, window_start)` makes re-processing idempotent, so a crash never drops or duplicates a candle.
-* **Efficient Dual-Format Serialisation:** The high-volume raw feed is encoded as Protocol Buffers (compact, schema-typed for Flink), while the lower-volume enriched candles use JSON for easy downstream mapping. Trades are batched into multi-row parameterised inserts to maximise database throughput.
-* **End-to-End Observability:** Both C++ services embed a Prometheus HTTP exporter publishing throughput, error, flush-latency, connection, and memory metrics. Prometheus scrapes these, and Grafana visualises both pipeline health (from Prometheus) and the market data itself (directly from TimescaleDB).
-* **Reproducible, Containerised Build:** Every service runs in Docker Compose. The C++ binaries are compiled in multi-stage builds with vcpkg-managed dependencies, and the Flink image compiles the shared Protobuf schema into a JVM jar so the stream processor can decode the producer's messages.
-
----
-
 ## Repository Structure
 * `producer.cpp` — C++ service that streams trades from Binance and publishes Protobuf to Redpanda.
 * `consumer.cpp` — C++ service that batches enriched candles from Redpanda into TimescaleDB.
@@ -44,8 +35,8 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
 ## Setup & Execution
 
 **1. Clone Repo:**
-* `git clone https://github.com/LucasCairnes/live_market_data/`
-* `cd live_market_data`
+* `git clone https://github.com/LucasCairnes/crypto_price_tracker/`
+* `cd crypto_price_tracker`
 
 **2. Build and Start the Stack:**
 Build the C++ services and bring up all containers.
