@@ -7,12 +7,12 @@
 ![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat&logo=prometheus&logoColor=white)
 ![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat&logo=grafana&logoColor=white)
 
-A real-time crypto market-data streaming pipeline built with C++, Apache Flink, and a Kafka-compatible message bus.
+A real-time crypto market data streaming pipeline built with C++ and Apache Flink.
 
-**The Grafana dashboards (Market Analytics + System Health) run locally at [http://localhost:3000](http://localhost:3000) once the stack is up.**
+**The Grafana dashboards can be seen locally at [http://localhost:3000](http://localhost:3000) when the stack is running.**
 
 ## Project Overview
-This pipeline ingests a live feed of Bitcoin trades from the Binance WebSocket API, aggregates them into 10-second candles in real time, and persists the results to a time-series database for analysis and visualisation. A high-throughput C++ producer publishes raw trades to Redpanda, an Apache Flink job computes VWAP and OHLC candles over event-time windows, and a C++ consumer batches the enriched results into TimescaleDB. The entire system is observable through Prometheus and Grafana.
+This pipeline ingests live Bitcoin trades from the Binance WebSocket API and uses a custom C++ producer to buffer them into Redpanda. An Apache Flink processing job applies 10 second tumbling to calculate OHLC and VWAP values. The C++ consumer then batches this enriched data into TimescaleDB, with system health and market metrics monitored via via Prometheus and Grafana.
 
 ---
 
@@ -38,7 +38,6 @@ This pipeline ingests a live feed of Bitcoin trades from the Binance WebSocket A
 
 ## Requirements
 * Docker & Docker Compose
-* An internet connection (for the Binance WebSocket feed)
 
 ---
 
