@@ -7,6 +7,10 @@ CREATE TABLE IF NOT EXISTS enriched_trades (
     vwap          DOUBLE PRECISION NOT NULL,
     volume        DOUBLE PRECISION NOT NULL,
     trade_count   BIGINT           NOT NULL,
+    open          DOUBLE PRECISION NOT NULL,
+    high          DOUBLE PRECISION NOT NULL,
+    low           DOUBLE PRECISION NOT NULL,
+    close         DOUBLE PRECISION NOT NULL,
     PRIMARY KEY (symbol, window_start)
 );
 

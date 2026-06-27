@@ -39,7 +39,11 @@ def main():
             window_end    STRING,
             vwap          DOUBLE,
             volume        DOUBLE,
-            trade_count   BIGINT
+            trade_count   BIGINT,
+            `open`        DOUBLE,
+            high          DOUBLE,
+            low           DOUBLE,
+            `close`       DOUBLE
         ) WITH (
             'connector' = 'kafka',
             'topic' = 'enriched_trades',
@@ -58,7 +62,11 @@ def main():
             CAST(window_end   AS STRING)          AS window_end,
             SUM(price * quantity) / SUM(quantity) AS vwap,
             SUM(quantity)                         AS volume,
-            COUNT(*)                              AS trade_count
+            COUNT(*)                              AS trade_count,
+            FIRST_VALUE(price)                    AS `open`,
+            MAX(price)                            AS high,
+            MIN(price)                            AS low,
+            LAST_VALUE(price)                     AS `close`
         FROM TABLE(
             TUMBLE(TABLE raw_trades, DESCRIPTOR(rowtime), INTERVAL '10' SECOND)
         )
