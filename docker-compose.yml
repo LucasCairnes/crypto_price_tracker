@@ -36,6 +36,9 @@ services:
       - redpanda
     environment:
       - BROKERS=redpanda:9092
+      - METRICS_PORT=9101
+    ports:
+      - "9101:9101"
     restart: unless-stopped
     networks:
       - streaming-network
@@ -104,7 +107,43 @@ services:
       - PG_USER=market
       - PG_PASSWORD=market
       - BATCH_SIZE=500
+      - METRICS_PORT=9102
+    ports:
+      - "9102:9102"
     restart: unless-stopped
+    networks:
+      - streaming-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - producer
+      - consumer
+    networks:
+      - streaming-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - timescaledb
     networks:
       - streaming-network
 
@@ -114,3 +153,5 @@ networks:
 
 volumes:
   timescale-data:
+  prometheus-data:
+  grafana-data:

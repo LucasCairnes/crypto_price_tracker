@@ -10,11 +10,11 @@ find_package(nlohmann_json CONFIG REQUIRED)
 find_package(RdKafka CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 find_package(libpqxx CONFIG REQUIRED)
+find_package(prometheus-cpp CONFIG REQUIRED)
 
 add_executable(producer producer.cpp)
 target_compile_features(producer PRIVATE cxx_std_20)
 
-# Generate trade.pb.{h,cc} from trade.proto into the build dir and attach to target
 protobuf_generate(TARGET producer PROTOS trade.proto LANGUAGE cpp
                   PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(producer PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
@@ -25,6 +25,8 @@ target_link_libraries(producer PRIVATE
     nlohmann_json::nlohmann_json
     RdKafka::rdkafka++
     protobuf::libprotobuf
+    prometheus-cpp::pull
+    prometheus-cpp::core
 )
 
 add_executable(consumer consumer.cpp)
@@ -34,4 +36,6 @@ target_link_libraries(consumer PRIVATE
     nlohmann_json::nlohmann_json
     RdKafka::rdkafka++
     libpqxx::pqxx
+    prometheus-cpp::pull
+    prometheus-cpp::core
 )

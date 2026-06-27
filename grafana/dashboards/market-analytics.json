@@ -1,0 +1,139 @@
+{
+  "id": null,
+  "uid": "market-analytics",
+  "title": "Market Analytics",
+  "tags": ["market", "timescaledb"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "name": "symbol",
+        "type": "query",
+        "datasource": { "type": "postgres", "uid": "timescaledb" },
+        "query": "SELECT DISTINCT symbol FROM enriched_trades ORDER BY symbol",
+        "refresh": 2,
+        "includeAll": false,
+        "current": { "text": "BTCUSDT", "value": "BTCUSDT" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "OHLC Candles ($symbol)",
+      "type": "candlestick",
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "gridPos": { "h": 11, "w": 18, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": {
+        "mode": "candles",
+        "candleStyle": "candles",
+        "colorStrategy": "open-close",
+        "includeAllFields": false
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT window_start AS \"time\", open, high, low, close FROM enriched_trades WHERE symbol = '$symbol' AND $__timeFilter(window_start) ORDER BY window_start"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Latest Close",
+      "type": "stat",
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "gridPos": { "h": 11, "w": 6, "x": 18, "y": 0 },
+      "fieldConfig": {
+        "defaults": { "unit": "currencyUSD", "decimals": 2 },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" },
+        "colorMode": "value",
+        "graphMode": "area"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT window_start AS \"time\", close FROM enriched_trades WHERE symbol = '$symbol' AND $__timeFilter(window_start) ORDER BY window_start"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "VWAP ($symbol)",
+      "type": "timeseries",
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 11 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyUSD",
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "showLegend": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT window_start AS \"time\", vwap FROM enriched_trades WHERE symbol = '$symbol' AND $__timeFilter(window_start) ORDER BY window_start"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Volume per Window ($symbol)",
+      "type": "timeseries",
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 11 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "bars", "fillOpacity": 60, "lineWidth": 1 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "showLegend": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT window_start AS \"time\", volume FROM enriched_trades WHERE symbol = '$symbol' AND $__timeFilter(window_start) ORDER BY window_start"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Trades per Window ($symbol)",
+      "type": "timeseries",
+      "datasource": { "type": "postgres", "uid": "timescaledb" },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 19 },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "bars", "fillOpacity": 50, "lineWidth": 1 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "showLegend": true } },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT window_start AS \"time\", trade_count FROM enriched_trades WHERE symbol = '$symbol' AND $__timeFilter(window_start) ORDER BY window_start"
+        }
+      ]
+    }
+  ]
+}

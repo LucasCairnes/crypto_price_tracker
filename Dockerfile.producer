@@ -3,6 +3,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential cmake ninja-build git curl zip unzip tar pkg-config \
         perl python3 autoconf automake autoconf-archive libtool m4 \
+        bison flex \
         ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -15,12 +16,12 @@ WORKDIR /app
 COPY vcpkg.json .
 RUN /opt/vcpkg/vcpkg install --x-install-root=/app/vcpkg_installed
 
-COPY CMakeLists.txt producer.cpp trade.proto ./
+COPY CMakeLists.txt producer.cpp consumer.cpp trade.proto ./
 RUN cmake -B build -S . \
         -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
         -DVCPKG_INSTALLED_DIR=/app/vcpkg_installed \
         -DCMAKE_BUILD_TYPE=Release \
-    && cmake --build build
+    && cmake --build build --target producer
 
 FROM ubuntu:24.04
 RUN apt-get update && apt-get install -y --no-install-recommends \

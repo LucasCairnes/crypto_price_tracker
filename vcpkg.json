@@ -7,6 +7,10 @@
     "nlohmann-json",
     "protobuf",
     "librdkafka",
-    "libpqxx"
+    "libpqxx",
+    {
+      "name": "prometheus-cpp",
+      "features": ["pull"]
+    }
   ]
 }
