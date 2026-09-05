@@ -1,5 +1,11 @@
-build/
-.venv/
 .git/
+.venv/
+build/
 .DS_Store
 *.csv
+
+# Not needed by any image build.
+monitoring/
+sql/
+docker-compose.yml
+README.md

@@ -1,3 +1,4 @@
-*.csv
 build/
 .venv
+*.csv
+.DS_Store

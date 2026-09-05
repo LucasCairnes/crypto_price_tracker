@@ -17,13 +17,28 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
 ---
 
 ## Repository Structure
-* `producer.cpp` — C++ service that streams trades from Binance and publishes Protobuf to Redpanda.
-* `consumer.cpp` — C++ service that batches enriched candles from Redpanda into TimescaleDB.
-* `trades_job.py` — The PyFlink job defining the VWAP/OHLC windowed aggregation.
-* `trade.proto` — Shared Protocol Buffers schema for raw trades.
-* `init.sql` — TimescaleDB schema and hypertable definition.
-* `docker-compose.yml` — Orchestration for all ten services.
-* `prometheus/` & `grafana/` — Monitoring configuration and provisioned dashboards.
+```
+├── cpp/                    C++ services
+│   ├── CMakeLists.txt
+│   ├── vcpkg.json          Dependency manifest
+│   └── src/
+│       ├── producer.cpp    Streams trades from Binance, publishes Protobuf to Redpanda
+│       └── consumer.cpp    Batches enriched candles from Redpanda into TimescaleDB
+├── protobuf/
+│   └── trade.proto         Shared trade schema, compiled for both C++ and Flink
+├── flink/
+│   └── trades_job.py       PyFlink job defining the VWAP/OHLC windowed aggregation
+├── sql/
+│   └── init.sql            TimescaleDB schema and hypertable definition
+├── docker/                 Image definitions (build context is the repo root)
+│   ├── producer.Dockerfile
+│   ├── consumer.Dockerfile
+│   └── flink.Dockerfile
+├── monitoring/
+│   ├── prometheus/         Scrape configuration
+│   └── grafana/            Datasources and provisioned dashboards
+└── docker-compose.yml      Orchestration for all ten services
+```
 
 ---
 
@@ -61,3 +76,10 @@ Watch enriched candles stream through Kafka, or query the database directly.
 
 **6. Tear Down:**
 * `docker compose down` (add `-v` to also remove data volumes)
+
+---
+
+## Building the C++ Services Outside Docker
+The CMake project lives in `cpp/` and picks up the shared schema from `protobuf/`, so build it from the repo root with:
+* `cmake -B build -S cpp -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake`
+* `cmake --build build`

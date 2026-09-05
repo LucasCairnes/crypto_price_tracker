@@ -1,3 +1,4 @@
+# Build context is the repository root.
 FROM ubuntu:24.04 AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -13,11 +14,13 @@ ENV VCPKG_ROOT=/opt/vcpkg
 
 WORKDIR /app
 
-COPY vcpkg.json .
+# Dependencies first, so the vcpkg layer stays cached across source edits.
+COPY cpp/vcpkg.json ./
 RUN /opt/vcpkg/vcpkg install --x-install-root=/app/vcpkg_installed
 
-COPY CMakeLists.txt producer.cpp consumer.cpp trade.proto ./
-RUN cmake -B build -S . \
+COPY protobuf/ ./protobuf/
+COPY cpp/ ./cpp/
+RUN cmake -B build -S cpp \
         -DCMAKE_TOOLCHAIN_FILE=/opt/vcpkg/scripts/buildsystems/vcpkg.cmake \
         -DVCPKG_INSTALLED_DIR=/app/vcpkg_installed \
         -DCMAKE_BUILD_TYPE=Release \

@@ -30,7 +30,7 @@ services:
   producer:
     build:
       context: .
-      dockerfile: Dockerfile.producer
+      dockerfile: docker/producer.Dockerfile
     container_name: producer
     depends_on:
       - redpanda
@@ -46,12 +46,12 @@ services:
   jobmanager:
     build:
       context: .
-      dockerfile: Dockerfile.flink
+      dockerfile: docker/flink.Dockerfile
     ports:
       - "8081:8081"
     command: jobmanager
     volumes:
-      - ./trades_job.py:/opt/flink/usrlib/trades_job.py
+      - ./flink/trades_job.py:/opt/flink/usrlib/trades_job.py
     environment:
       - |
         FLINK_PROPERTIES=
@@ -62,7 +62,7 @@ services:
   taskmanager:
     build:
       context: .
-      dockerfile: Dockerfile.flink
+      dockerfile: docker/flink.Dockerfile
     depends_on:
       - jobmanager
     command: taskmanager
@@ -86,7 +86,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
       - timescale-data:/var/lib/postgresql/data
     networks:
       - streaming-network
@@ -94,7 +94,7 @@ services:
   consumer:
     build:
       context: .
-      dockerfile: Dockerfile.consumer
+      dockerfile: docker/consumer.Dockerfile
     container_name: consumer
     depends_on:
       - redpanda
@@ -118,7 +118,7 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
@@ -136,8 +136,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning
-      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
       - grafana-data:/var/lib/grafana
     ports:
       - "3000:3000"

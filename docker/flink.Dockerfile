@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y python3 python3-pip default-jdk-headles
     && ln -s /usr/bin/python3 /usr/bin/python \
     && JAVA_HOME=$(dirname $(dirname $(readlink -f $(which javac)))) pip3 install apache-flink==1.20.0
 
-COPY trade.proto /tmp/trade.proto
+COPY protobuf/trade.proto /tmp/trade.proto
 RUN set -eux; \
     case "$(uname -m)" in \
       aarch64) pc="linux-aarch_64" ;; \
