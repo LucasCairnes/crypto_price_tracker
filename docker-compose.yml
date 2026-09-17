@@ -18,10 +18,10 @@ services:
     image: docker.redpanda.com/redpandadata/console:latest
     container_name: redpanda-console
     entrypoint: /app/console
-    ports:
-      - "8080:8080"
     environment:
       - KAFKA_BROKERS=redpanda:9092
+    ports:
+      - "8080:8080"
     depends_on:
       - redpanda
     networks:
@@ -34,9 +34,6 @@ services:
     container_name: producer
     depends_on:
       - redpanda
-    environment:
-      - BROKERS=redpanda:9092
-      - METRICS_PORT=9101
     ports:
       - "9101:9101"
     restart: unless-stopped
@@ -47,9 +44,9 @@ services:
     build:
       context: .
       dockerfile: docker/flink.Dockerfile
+    command: jobmanager
     ports:
       - "8081:8081"
-    command: jobmanager
     volumes:
       - ./flink/trades_job.py:/opt/flink/usrlib/trades_job.py
     environment:
@@ -58,14 +55,14 @@ services:
         jobmanager.rpc.address: jobmanager
     networks:
       - streaming-network
-        
+
   taskmanager:
     build:
       context: .
       dockerfile: docker/flink.Dockerfile
+    command: taskmanager
     depends_on:
       - jobmanager
-    command: taskmanager
     deploy:
       replicas: 2
     environment:
@@ -99,15 +96,6 @@ services:
     depends_on:
       - redpanda
       - timescaledb
-    environment:
-      - BROKERS=redpanda:9092
-      - TOPIC=enriched_trades
-      - PG_HOST=timescaledb
-      - PG_DB=market
-      - PG_USER=market
-      - PG_PASSWORD=market
-      - BATCH_SIZE=500
-      - METRICS_PORT=9102
     ports:
       - "9102:9102"
     restart: unless-stopped

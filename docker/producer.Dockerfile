@@ -1,20 +1,16 @@
-# Build context is the repository root.
 FROM ubuntu:24.04 AS builder
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
         build-essential cmake ninja-build git curl zip unzip tar pkg-config \
         perl python3 autoconf automake autoconf-archive libtool m4 \
-        bison flex \
-        ca-certificates \
+        bison flex ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone --depth 1 https://github.com/microsoft/vcpkg.git /opt/vcpkg \
     && /opt/vcpkg/bootstrap-vcpkg.sh -disableMetrics
-ENV VCPKG_ROOT=/opt/vcpkg
 
 WORKDIR /app
 
-# Dependencies first, so the vcpkg layer stays cached across source edits.
 COPY cpp/vcpkg.json ./
 RUN /opt/vcpkg/vcpkg install --x-install-root=/app/vcpkg_installed
 
