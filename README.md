@@ -18,26 +18,26 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
 
 ## Repository Structure
 ```
-├── cpp/                    C++ services
+├── cpp/                   
 │   ├── CMakeLists.txt
-│   ├── vcpkg.json          Dependency manifest
+│   ├── vcpkg.json         
 │   └── src/
-│       ├── producer.cpp    Streams trades from Binance, publishes Protobuf to Redpanda
-│       └── consumer.cpp    Batches enriched candles from Redpanda into TimescaleDB
+│       ├── producer.cpp    
+│       └── consumer.cpp    
 ├── protobuf/
-│   └── trade.proto         Shared trade schema, compiled for both C++ and Flink
+│   └── trade.proto        
 ├── flink/
-│   └── trades_job.py       PyFlink job defining the VWAP/OHLC windowed aggregation
+│   └── trades_job.py      
 ├── sql/
-│   └── init.sql            TimescaleDB schema and hypertable definition
-├── docker/                 Image definitions (build context is the repo root)
+│   └── init.sql           
+├── docker/                
 │   ├── producer.Dockerfile
 │   ├── consumer.Dockerfile
 │   └── flink.Dockerfile
 ├── monitoring/
-│   ├── prometheus/         Scrape configuration
-│   └── grafana/            Datasources and provisioned dashboards
-└── docker-compose.yml      Orchestration for all ten services
+│   ├── prometheus/        
+│   └── grafana/            
+└── docker-compose.yml    
 ```
 
 ---
