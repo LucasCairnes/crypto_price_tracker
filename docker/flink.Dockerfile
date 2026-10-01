@@ -2,7 +2,8 @@ FROM flink:1.20
 
 RUN wget -P /opt/flink/lib/ https://repo1.maven.org/maven2/org/apache/flink/flink-sql-connector-kafka/3.3.0-1.20/flink-sql-connector-kafka-3.3.0-1.20.jar \
  && wget -P /opt/flink/lib/ https://repo1.maven.org/maven2/org/apache/flink/flink-protobuf/1.20.0/flink-protobuf-1.20.0.jar \
- && wget -P /opt/flink/lib/ https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.21.7/protobuf-java-3.21.7.jar
+ && wget -P /opt/flink/lib/ https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/3.21.7/protobuf-java-3.21.7.jar \
+ && cp /opt/flink/opt/flink-python-*.jar /opt/flink/lib/
 
 
 RUN apt-get update && apt-get install -y python3 python3-pip default-jdk-headless unzip \

@@ -54,19 +54,15 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
 * `cd crypto_price_tracker`
 
 **2. Build and Start the Stack:**
-Build the C++ services and bring up all containers.
+Build the C++ services and bring up all containers. The Flink jobmanager runs in application mode and submits the windowed aggregation job itself on startup.
 * `docker compose up -d --build`
 
-**3. Submit the Flink Job:**
-Once the cluster is running, submit the windowed aggregation job.
-* `docker compose exec jobmanager flink run -d -py /opt/flink/usrlib/trades_job.py`
-
-**4. Inspect the Data:**
+**3. Inspect the Data:**
 Watch enriched candles stream through Kafka, or query the database directly.
 * `docker compose exec redpanda rpk topic consume enriched_trades`
 * `docker compose exec timescaledb psql -U market -d market -c "SELECT * FROM enriched_trades ORDER BY window_start DESC LIMIT 10;"`
 
-**5. View Metrics & Dashboards:**
+**4. View Metrics & Dashboards:**
 * `curl localhost:9101/metrics` — producer metrics
 * `curl localhost:9102/metrics` — consumer metrics
 * [http://localhost:9090](http://localhost:9090) — Prometheus

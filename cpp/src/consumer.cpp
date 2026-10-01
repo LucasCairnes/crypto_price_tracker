@@ -200,7 +200,6 @@ int main() {
             std::cerr << "consume error: " << msg->errstr() << "\n";
         }
 
-        // Flush on size, or once the oldest buffered row has waited long enough.
         if (!batch.empty() &&
             (batch.size() >= BATCH_SIZE ||
              std::chrono::steady_clock::now() - batch_started >= MAX_BATCH_AGE)) {
