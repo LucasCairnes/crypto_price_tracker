@@ -4,5 +4,5 @@ build/
 *.csv
 monitoring/
 sql/
-docker-compose.yml
+docker/docker-compose.yml
 README.md

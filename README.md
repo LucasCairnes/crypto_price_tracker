@@ -31,13 +31,13 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
 ├── sql/
 │   └── init.sql           
 ├── docker/                
+│   ├── docker-compose.yml
 │   ├── producer.Dockerfile
 │   ├── consumer.Dockerfile
 │   └── flink.Dockerfile
-├── monitoring/
-│   ├── prometheus/        
-│   └── grafana/            
-└── docker-compose.yml    
+└── monitoring/
+    ├── prometheus/        
+    └── grafana/            
 ```
 
 ---
@@ -51,10 +51,10 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
 
 **1. Clone Repo:**
 * `git clone https://github.com/LucasCairnes/crypto_price_tracker/`
-* `cd crypto_price_tracker`
+* `cd crypto_price_tracker/docker`
 
 **2. Build and Start the Stack:**
-Build the C++ services and bring up all containers. The Flink jobmanager runs in application mode and submits the windowed aggregation job itself on startup.
+Build the C++ services and bring up all containers. The Flink jobmanager runs in application mode and submits the windowed aggregation job itself on startup. Run the `docker compose` commands below from the `docker/` folder.
 * `docker compose up -d --build`
 
 **3. Inspect the Data:**
@@ -70,7 +70,7 @@ Watch enriched candles stream through Kafka, or query the database directly.
 * [http://localhost:8081](http://localhost:8081) — Flink dashboard
 * [http://localhost:8080](http://localhost:8080) — Redpanda Console
 
-**6. Tear Down:**
+**5. Tear Down:**
 * `docker compose down` (add `-v` to also remove data volumes)
 
 ---

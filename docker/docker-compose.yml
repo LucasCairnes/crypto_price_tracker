@@ -1,3 +1,5 @@
+name: crypto_price_tracker
+
 services:
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:latest
@@ -29,7 +31,7 @@ services:
 
   producer:
     build:
-      context: .
+      context: ..
       dockerfile: docker/producer.Dockerfile
     container_name: producer
     depends_on:
@@ -42,7 +44,7 @@ services:
 
   jobmanager:
     build:
-      context: .
+      context: ..
       dockerfile: docker/flink.Dockerfile
     command: standalone-job --python /opt/flink/usrlib/trades_job.py
     depends_on:
@@ -50,7 +52,7 @@ services:
     ports:
       - "8081:8081"
     volumes:
-      - ./flink/trades_job.py:/opt/flink/usrlib/trades_job.py
+      - ../flink/trades_job.py:/opt/flink/usrlib/trades_job.py
     restart: unless-stopped
     environment:
       - |
@@ -62,7 +64,7 @@ services:
 
   taskmanager:
     build:
-      context: .
+      context: ..
       dockerfile: docker/flink.Dockerfile
     command: taskmanager
     depends_on:
@@ -88,14 +90,14 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../sql/init.sql:/docker-entrypoint-initdb.d/init.sql
       - timescale-data:/var/lib/postgresql/data
     networks:
       - streaming-network
 
   consumer:
     build:
-      context: .
+      context: ..
       dockerfile: docker/consumer.Dockerfile
     container_name: consumer
     depends_on:
@@ -111,7 +113,7 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
@@ -129,8 +131,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards
       - grafana-data:/var/lib/grafana
     ports:
       - "3000:3000"
