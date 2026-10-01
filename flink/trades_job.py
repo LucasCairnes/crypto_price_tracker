@@ -15,7 +15,7 @@ t_env.execute_sql("""
         trade_time            BIGINT,
         buyer_is_market_maker BOOLEAN,
         rowtime AS TO_TIMESTAMP_LTZ(trade_time, 3),
-        WATERMARK FOR rowtime AS rowtime - INTERVAL '5' SECOND
+        WATERMARK FOR rowtime AS rowtime - INTERVAL '2' SECOND
     ) WITH (
         'connector' = 'kafka',
         'topic' = 'raw_trades',

@@ -23,10 +23,11 @@ using json = nlohmann::json;
 const std::string BROKERS = "redpanda:9092";
 const std::string TOPIC = "enriched_trades";
 const std::string GROUP_ID = "timescale-sink";
-const std::string CONNINFO =
-    "host=timescaledb port=5432 dbname=market user=market password=market";
+const std::string CONNINFO = "host=timescaledb port=5432 dbname=market user=market password=market";
 const std::string METRICS_BIND = "0.0.0.0:9102";
 const size_t BATCH_SIZE = 500;
+const auto MAX_BATCH_AGE = std::chrono::milliseconds(250);
+const int POLL_TIMEOUT_MS = 100;
 
 struct Candle {
     std::string symbol;
@@ -158,6 +159,7 @@ int main() {
 
     std::vector<Candle> batch;
     batch.reserve(BATCH_SIZE);
+    std::chrono::steady_clock::time_point batch_started;
 
     auto flush = [&]() {
         if (batch.empty()) return;
@@ -181,23 +183,28 @@ int main() {
     std::cout << "consumer running, metrics on " << METRICS_BIND << "\n";
 
     while (running) {
-        std::unique_ptr<RdKafka::Message> msg(consumer->consume(1000));
+        std::unique_ptr<RdKafka::Message> msg(consumer->consume(POLL_TIMEOUT_MS));
 
         if (msg->err() == RdKafka::ERR_NO_ERROR) {
             consumed.Increment();
             try {
-                batch.push_back(parse_candle(
-                    std::string(static_cast<const char *>(msg->payload()), msg->len())));
+                Candle c = parse_candle(
+                    std::string(static_cast<const char *>(msg->payload()), msg->len()));
+                if (batch.empty()) batch_started = std::chrono::steady_clock::now();
+                batch.push_back(std::move(c));
             } catch (const std::exception &e) {
                 parse_errors.Increment();
                 std::cerr << "bad message: " << e.what() << "\n";
             }
-            if (batch.size() >= BATCH_SIZE) flush();
-        } else if (msg->err() == RdKafka::ERR__TIMED_OUT ||
-                   msg->err() == RdKafka::ERR__PARTITION_EOF) {
-            flush();
-        } else {
+        } else if (msg->err() != RdKafka::ERR__TIMED_OUT) {
             std::cerr << "consume error: " << msg->errstr() << "\n";
+        }
+
+        // Flush on size, or once the oldest buffered row has waited long enough.
+        if (!batch.empty() &&
+            (batch.size() >= BATCH_SIZE ||
+             std::chrono::steady_clock::now() - batch_started >= MAX_BATCH_AGE)) {
+            flush();
         }
 
         batch_fill.Set(batch.size());
