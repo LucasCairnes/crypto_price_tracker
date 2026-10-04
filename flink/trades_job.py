@@ -1,6 +1,7 @@
 from pyflink.table import EnvironmentSettings, TableEnvironment
 
 t_env = TableEnvironment.create(EnvironmentSettings.in_streaming_mode())
+t_env.get_config().set("execution.checkpointing.interval", "10s")
 
 t_env.execute_sql("""
     CREATE TABLE raw_trades (
