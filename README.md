@@ -14,7 +14,6 @@ A real-time crypto market data streaming pipeline built with C++ and Apache Flin
 ## Project Overview
 This pipeline ingests live Bitcoin trades from the Binance WebSocket API and uses a custom C++ producer to buffer them into Redpanda. An Apache Flink processing job applies 10 second tumbling to calculate OHLC and VWAP values. The C++ consumer then batches this enriched data into TimescaleDB, with system health and market metrics monitored via via Prometheus and Grafana.
 
----
 
 ## Repository Structure
 ```
@@ -40,12 +39,9 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
     └── grafana/            
 ```
 
----
-
 ## Requirements
 * Docker & Docker Compose
 
----
 
 ## Setup & Execution
 
@@ -54,7 +50,7 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
 * `cd crypto_price_tracker/docker`
 
 **2. Build and Start the Stack:**
-Build the C++ services and bring up all containers. The Flink jobmanager runs in application mode and submits the windowed aggregation job itself on startup. Run the `docker compose` commands below from the `docker/` folder.
+Builds and starts every service in the background.
 * `docker compose up -d --build`
 
 **3. View Metrics & Dashboards:**
@@ -64,6 +60,12 @@ Build the C++ services and bring up all containers. The Flink jobmanager runs in
 * [http://localhost:3000](http://localhost:3000) — Grafana (admin/admin): Market Analytics + System Health
 * [http://localhost:8081](http://localhost:8081) — Flink dashboard
 * [http://localhost:8080](http://localhost:8080) — Redpanda Console
+
+**4. View Logs:**
+* `cd docker`
+* `docker compose logs -f producer` — producer logs
+* `docker compose logs -f consumer` — consumer logs
+
 
 **5. Tear Down:**
 * `docker compose down` (add `-v` to also remove data volumes)
