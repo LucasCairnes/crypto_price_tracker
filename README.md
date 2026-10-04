@@ -57,12 +57,7 @@ This pipeline ingests live Bitcoin trades from the Binance WebSocket API and use
 Build the C++ services and bring up all containers. The Flink jobmanager runs in application mode and submits the windowed aggregation job itself on startup. Run the `docker compose` commands below from the `docker/` folder.
 * `docker compose up -d --build`
 
-**3. Inspect the Data:**
-Watch enriched candles stream through Kafka, or query the database directly.
-* `docker compose exec redpanda rpk topic consume enriched_trades`
-* `docker compose exec timescaledb psql -U market -d market -c "SELECT * FROM enriched_trades ORDER BY window_start DESC LIMIT 10;"`
-
-**4. View Metrics & Dashboards:**
+**3. View Metrics & Dashboards:**
 * `curl localhost:9101/metrics` — producer metrics
 * `curl localhost:9102/metrics` — consumer metrics
 * [http://localhost:9090](http://localhost:9090) — Prometheus
@@ -73,9 +68,3 @@ Watch enriched candles stream through Kafka, or query the database directly.
 **5. Tear Down:**
 * `docker compose down` (add `-v` to also remove data volumes)
 
----
-
-## Building the C++ Services Outside Docker
-The CMake project lives in `cpp/` and picks up the shared schema from `protobuf/`, so build it from the repo root with:
-* `cmake -B build -S cpp -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake`
-* `cmake --build build`
