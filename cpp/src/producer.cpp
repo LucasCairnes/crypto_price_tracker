@@ -60,6 +60,7 @@ int main() {
     std::string err;
     std::unique_ptr<RdKafka::Conf> conf(RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL));
     conf->set("bootstrap.servers", BROKERS, err);
+    conf->set("enable.idempotence", "true", err);
     std::unique_ptr<RdKafka::Producer> producer(RdKafka::Producer::create(conf.get(), err));
     if (!producer) {
         std::cerr << "could not create producer: " << err << "\n";
