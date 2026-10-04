@@ -8,8 +8,8 @@ t_env.execute_sql("""
         event_time            BIGINT,
         symbol                STRING,
         agg_trade_id          BIGINT,
-        price                 DOUBLE,
-        quantity              DOUBLE,
+        price                 STRING,
+        quantity              STRING,
         first_trade_id        BIGINT,
         last_trade_id         BIGINT,
         trade_time            BIGINT,
@@ -33,13 +33,13 @@ t_env.execute_sql("""
         symbol        STRING,
         window_start  STRING,
         window_end    STRING,
-        vwap          DOUBLE,
-        volume        DOUBLE,
+        vwap          STRING,
+        volume        STRING,
         trade_count   BIGINT,
-        `open`        DOUBLE,
-        high          DOUBLE,
-        low           DOUBLE,
-        `close`       DOUBLE
+        `open`        STRING,
+        high          STRING,
+        low           STRING,
+        `close`       STRING
     ) WITH (
         'connector' = 'kafka',
         'topic' = 'enriched_trades',
@@ -50,20 +50,30 @@ t_env.execute_sql("""
 """)
 
 t_env.execute_sql("""
+    CREATE TEMPORARY VIEW trades AS
+    SELECT
+        symbol,
+        CAST(price AS DECIMAL(18, 8))    AS price,
+        CAST(quantity AS DECIMAL(18, 8)) AS quantity,
+        rowtime
+    FROM raw_trades
+""")
+
+t_env.execute_sql("""
     INSERT INTO enriched_trades
     SELECT
         symbol,
         CAST(window_start AS STRING),
         CAST(window_end AS STRING),
-        SUM(price * quantity) / SUM(quantity) AS vwap,
-        SUM(quantity)                         AS volume,
-        COUNT(*)                              AS trade_count,
-        FIRST_VALUE(price)                    AS `open`,
-        MAX(price)                            AS high,
-        MIN(price)                            AS low,
-        LAST_VALUE(price)                     AS `close`
+        CAST(CAST(SUM(price * quantity) / SUM(quantity) AS DECIMAL(38, 8)) AS STRING) AS vwap,
+        CAST(SUM(quantity) AS STRING)      AS volume,
+        COUNT(*)                           AS trade_count,
+        CAST(FIRST_VALUE(price) AS STRING) AS `open`,
+        CAST(MAX(price) AS STRING)         AS high,
+        CAST(MIN(price) AS STRING)         AS low,
+        CAST(LAST_VALUE(price) AS STRING)  AS `close`
     FROM TABLE(
-        TUMBLE(TABLE raw_trades, DESCRIPTOR(rowtime), INTERVAL '10' SECOND)
+        TUMBLE(TABLE trades, DESCRIPTOR(rowtime), INTERVAL '10' SECOND)
     )
     GROUP BY symbol, window_start, window_end
 """)

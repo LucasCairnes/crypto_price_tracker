@@ -33,13 +33,13 @@ struct Candle {
     std::string symbol;
     std::string window_start;
     std::string window_end;
-    double vwap;
-    double volume;
+    std::string vwap;
+    std::string volume;
     int64_t trade_count;
-    double open;
-    double high;
-    double low;
-    double close;
+    std::string open;
+    std::string high;
+    std::string low;
+    std::string close;
 };
 
 std::atomic<bool> running{true};
@@ -67,13 +67,13 @@ Candle parse_candle(const std::string &payload) {
     c.symbol = j.at("symbol").get<std::string>();
     c.window_start = j.at("window_start").get<std::string>();
     c.window_end = j.at("window_end").get<std::string>();
-    c.vwap = j.at("vwap").get<double>();
-    c.volume = j.at("volume").get<double>();
+    c.vwap = j.at("vwap").get<std::string>();
+    c.volume = j.at("volume").get<std::string>();
     c.trade_count = j.at("trade_count").get<int64_t>();
-    c.open = j.at("open").get<double>();
-    c.high = j.at("high").get<double>();
-    c.low = j.at("low").get<double>();
-    c.close = j.at("close").get<double>();
+    c.open = j.at("open").get<std::string>();
+    c.high = j.at("high").get<std::string>();
+    c.low = j.at("low").get<std::string>();
+    c.close = j.at("close").get<std::string>();
     return c;
 }
 

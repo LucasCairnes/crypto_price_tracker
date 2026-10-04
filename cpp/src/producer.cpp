@@ -106,8 +106,8 @@ int main() {
             trade.set_event_time(j["E"].get<int64_t>());
             trade.set_symbol(j["s"].get<std::string>());
             trade.set_agg_trade_id(j["a"].get<int64_t>());
-            trade.set_price(std::stod(j["p"].get<std::string>()));
-            trade.set_quantity(std::stod(j["q"].get<std::string>()));
+            trade.set_price(j["p"].get<std::string>());
+            trade.set_quantity(j["q"].get<std::string>());
             trade.set_first_trade_id(j["f"].get<int64_t>());
             trade.set_last_trade_id(j["l"].get<int64_t>());
             trade.set_trade_time(j["T"].get<int64_t>());

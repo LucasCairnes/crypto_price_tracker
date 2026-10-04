@@ -10,8 +10,8 @@ message Trade {
   int64 event_time = 2;
   string symbol = 3;
   int64 agg_trade_id = 4;
-  double price = 5;
-  double quantity = 6;
+  string price = 5;
+  string quantity = 6;
   int64 first_trade_id = 7;
   int64 last_trade_id = 8;
   int64 trade_time = 9;
