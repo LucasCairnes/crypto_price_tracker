@@ -23,6 +23,7 @@ using json = nlohmann::json;
 const std::string BROKERS = "redpanda:9092";
 const std::string TOPIC = "raw_trades";
 const std::string BINANCE_URL = "wss://stream.binance.com:9443/ws";
+const std::string STREAM = "btcusdt@aggTrade";
 const std::string METRICS_BIND = "0.0.0.0:9101";
 
 std::atomic<bool> running{true};
@@ -69,7 +70,7 @@ int main() {
 
     json subscribe = {
         {"method", "SUBSCRIBE"},
-        {"params", {"btcusdt@aggTrade"}},
+        {"params", {STREAM}},
         {"id", 1}
     };
 
