@@ -54,15 +54,14 @@ Builds and starts every service in the background.
 * `docker compose up -d --build`
 
 **3. View Metrics & Dashboards:**
-* `curl localhost:9101/metrics` — producer metrics
-* `curl localhost:9102/metrics` — consumer metrics
+* [http://localhost:9101/metrics](http://localhost:9101/metrics) — producer metrics
+* [http://localhost:9102/metrics](http://localhost:9102/metrics) — consumer metrics
 * [http://localhost:9090](http://localhost:9090) — Prometheus
 * [http://localhost:3000](http://localhost:3000) — Grafana (admin/admin): Market Analytics + System Health
 * [http://localhost:8081](http://localhost:8081) — Flink dashboard
 * [http://localhost:8080](http://localhost:8080) — Redpanda Console
 
 **4. View Logs:**
-* `cd docker`
 * `docker compose logs -f producer` — producer logs
 * `docker compose logs -f consumer` — consumer logs
 
